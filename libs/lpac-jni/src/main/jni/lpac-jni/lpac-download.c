@@ -6,6 +6,9 @@
 #include <syslog.h>
 #include "lpac-download.h"
 
+// SGP.22 v2.2.2 section 2.5.5: block size for Bound Profile Package segments
+#define SGP22_BPP_BLOCK_SIZE 255
+
 jobject download_state_preparing;
 jobject download_state_connecting;
 jobject download_state_authenticating;
@@ -211,6 +214,7 @@ Java_net_typeblog_lpac_1jni_LpacJni_downloadProfile(JNIEnv *env, jobject thiz, j
     jobject confirming_download_state = NULL;
     jstring late_confirmation_code = NULL;
     jboolean confirmed = JNI_TRUE;
+    uint8_t saved_es10x_mss;
     int ret;
 
     if (confirmation_code != NULL)
@@ -342,7 +346,18 @@ Java_net_typeblog_lpac_1jni_LpacJni_downloadProfile(JNIEnv *env, jobject thiz, j
         goto out;
     }
 
+    // SGP.22 v2.2.2 section 2.5.5: each BPP segment up to 255 bytes SHALL be sent in one APDU,
+    // larger TLVs in blocks of 255 bytes. With the default ES10x MSS 63 strict eUICCs (NXP,
+    // EID prefix 89043051 on S21) reject the first block with SW 6A80. Use 255 for
+    // LoadBoundProfilePackage only. (port of PeterCxy/OpenEUICC#359 by Macktherealonereally)
+    saved_es10x_mss = ctx->es10x_mss;
+    if (ctx->es10x_mss < SGP22_BPP_BLOCK_SIZE) {
+        syslog(LOG_INFO, "es10b_load_bound_profile_package: MSS %u -> %u (SGP.22 2.5.5)",
+               (unsigned) ctx->es10x_mss, (unsigned) SGP22_BPP_BLOCK_SIZE);
+        ctx->es10x_mss = SGP22_BPP_BLOCK_SIZE;
+    }
     ret = es10b_load_bound_profile_package(ctx, &es10b_load_bound_profile_package_result);
+    ctx->es10x_mss = saved_es10x_mss;
     syslog(LOG_INFO, "es10b_load_bound_profile_package %d, reason %d", ret, es10b_load_bound_profile_package_result.errorReason);
     if (ret < 0) {
         ret = - (int) es10b_load_bound_profile_package_result.errorReason;
