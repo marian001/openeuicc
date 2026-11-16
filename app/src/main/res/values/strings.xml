@@ -10,6 +10,10 @@
     <string name="footer_mep">Multiple Enabled Profiles (MEP) is supported by this slot. To enable or disable this feature, use the \"Slot Mapping\" tool.</string>
 
     <string name="slot_mapping">Slot Mapping</string>
+    <string name="tsds2_switch_to_esim">Use built-in eSIM as SIM 2</string>
+    <string name="tsds2_switch_to_tray">Use SIM tray 2 instead of eSIM</string>
+    <string name="tsds2_switch_done">SIM 2 switched. Please wait until the modem refreshes the slots.</string>
+    <string name="tsds2_switch_failed">Could not switch SIM 2.</string>
     <string name="slot_mapping_logical_slot">Logical slot %d:</string>
     <string name="slot_mapping_port">Slot %1$d Port %2$d</string>
     <string name="slot_mapping_help">Your phone has %1$d logical and %2$d physical SIM slots.%3$s\n\nSelect which physical slot and/or \"port\" you want each logical slot to correspond to. Note that not all mapping modes may be supported by hardware.</string>
